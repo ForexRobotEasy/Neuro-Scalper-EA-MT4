@@ -1,0 +1,66 @@
+
+// Neuro Scalper EA MT4
+// Developer: Forex Robot Easy Team
+// Developer's Site: forexroboteasy.com
+
+// Include required libraries
+#include <Trade\Trade.mqh>
+#include <NeuroScalper\NeuroScalper.mqh>
+
+// Define global variables
+CTrade trade; // Trade object for executing trades
+CNeuroScalper neuroScalper; // Neuro Scalper indicator object
+bool isOptimizationMode = false; // Flag to indicate optimization mode
+
+// Initialize the EA
+int OnInit()
+{   
+    // Set up the Neuro Scalper indicator
+    neuroScalper.Init();
+
+    // Determine if the EA is in optimization mode
+    isOptimizationMode = IsOptimization();
+
+    // If in optimization mode, set up optimization parameters
+    if(isOptimizationMode)
+    {
+        neuroScalper.SetOptimizationParameters();
+    }
+
+    return(INIT_SUCCEEDED);
+}
+
+// Handle each tick of the market
+void OnTick()
+{
+    // Check for bullish and bearish divergence
+    neuroScalper.CheckDivergence();
+
+    // Generate buy and sell signals based on divergence
+    if(neuroScalper.IsBullishDivergence())
+    {
+        trade.Buy();
+    }
+    else if(neuroScalper.IsBearishDivergence())
+    {
+        trade.Sell();
+    }
+}
+
+// Handle the end of each bar
+void OnBar()
+{
+    // Automatically find the best values for trading on the EUR/USD 1-hour timeframe
+    if(!isOptimizationMode && Symbol() == 'EURUSD' && Period() == PERIOD_H1)
+    {
+        neuroScalper.AutoOptimize();
+    }
+}
+
+// Handle deinitialization of the EA
+void OnDeinit(const int reason)
+{
+    // Clean up resources
+    neuroScalper.Deinit();
+}
+
